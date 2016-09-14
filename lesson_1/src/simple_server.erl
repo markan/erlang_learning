@@ -65,19 +65,19 @@ slow_fizzbuzz(Server, Requester, Number) ->
     Server ! {slow_fizzbuzz_result, Requester, {fizzbuzz(Number), Number}}.
 
 loop(#state{requests=Requests, replies=Replies}=State) ->
-    State1 = 
+    State1 =
         receive
             {isfizzbuzz, From, Number} ->
                 From ! {fizzbuzz(Number), Number},
                 State#state{requests=Requests+1, replies=Replies+1};
             {slow_isfizzbuzz, From, Number} ->
                 Self = self(),
-                spawn(fun () -> slow_fizzbuzz(Self, From, Number) end),
+                spawn_link(fun () -> slow_fizzbuzz(Self, From, Number) end),
                 State#state{requests=Requests+1};
-        {slow_fizzbuzz_result, Requester, Answer} ->
+            {slow_fizzbuzz_result, Requester, Answer} ->
                 Requester ! Answer,
                 State#state{replies=Replies+1};
-        {stats, From} ->
+            {stats, From} ->
                 From ! {stats, State#state.requests, State#state.replies},
                 State
         end,
