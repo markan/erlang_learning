@@ -6,7 +6,9 @@ returns fizzbuzz results.
 
 Now let's write this as a gen_server.
 
+References
 ==========
-
+http://erlang.org/doc/design_principles/gen_server_concepts.html
+http://learnyousomeerlang.com/clients-and-servers
 
 
