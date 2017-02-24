@@ -26,6 +26,10 @@ It's been a couple of years since it was updated, but it's still very much relev
 Sections 2-5 complement the Learn You Some Erlang content well for a more direct approach
 to the same material outlined above.
 
+##### Erlang Getting Started.
+Online at http://erlang.org/doc/getting_started/users_guide.html, or
+PDF at http://erlang.org/download/getting_started-5.4.pdf
+
 
 #### exercisim.io
 Not all of the exercises seem particularly valuable, but I did like a few (expand)
