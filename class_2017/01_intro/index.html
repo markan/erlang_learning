@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Erlang Tutorial: Introduction to Erlang at Chef</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+     <script src="jquery.js"></script> 
+    <script> 
+    $(function(){
+      $("#includedContent").load("Slides.md"); 
+    });
+    </script> 
+  </head>
+  <body>
+    <textarea id="source">
+
+# What is Erlang?
+## Erlang is:
+
+* A pure functional programming language
+* Designed for massive concurrency
+* It's OTP library provides a good pattern for resiliency
+
+---
+# What is Erlang?
+## Erlang is not:
+* A particularly good *systems* programming language
+* A way to get bare metal speed
+  * but think twice before you say you need that
+* Terribly similar to other common languages
+  * learning curve is a thing
+
+---
+# What is this class about?
+
+* Helping people new to Erlang get started
+* Introducing the 'Chef Style' of Erlang
+* Overview of the core Erlang components used by Chef 
+* ... and the occasional deeper dive into interesting topics as we
+  find them.
+* It will be opinionated.
+
+Guest sessions are welcome!
+
+---
+# This is not a substitute for the many good resources on erlang
+* "Learn You Some Erlang for Great Good" is my favorite
+
+  http://learnyousomeerlang.com or buy the book
+
+* "Erlang Programming" by Francesco Cesarini and Simon Thompson, O'Reilly Press
+
+  It's what I learned Erlang from, but it's not been updated in a while
+
+* "Erlang and OTP in Action" by Eric Merritt, Martin Logan, and Richard Carlsson, Manning Press
+
+   This covers some introductory material, but where it really shines is in it's coverage of the OTP runtime system.
+
+---
+# Why does Chef use Erlang?
+
+* Functional/actor model makes it easy to reason about concurrency
+
+* Erlang's OTP library makes it easy to build resilient systems
+
+* Easily scales to tens of thousands of threads
+
+* Per thread garbage collection makes handling web requests very
+efficient
+
+* Incredibly powerful built-in inspection tools for live systems. (Trace anything)
+
+---
+# OTP and the 'let it crash philosophy'
+
+* Error handling and recovery is hard
+
+* The recovery process can be complex
+
+* Instead, restart subsystems to put them in a known state
+
+* Erlang/OTP is built around that approach
+
+???
+In some senses sophisticated error handling and recovery becomes an *optimization*
+
+---
+# What parts of Erlang don't we use?
+* Distributed Erlang (multiple hosts)
+
+* Live systems update
+
+???
+Distributed erlang is really amazing, but there are some blockers
+(security), and we've not really *needed* it yet.
+ 
+---
+# ERL
+* Erlang has a REPL shell: 'erl'
+```erlang
+% erl
+> 1 + 1.
+2
+```
+  * If a line begins with a '>' it's intended for _erl_
+  * Commas separate expressions
+  * Periods terminate 'statements'
+
+## The erl shell is a powerful tool
+* Beyond the normal uses of a repl it can also be used to connect to other running instances
+
+???
+A later session will go into the shell in more detail
+
+---
+# A whiplash inducing tour of Erlang syntax
+* Expressions
+* Types
+* Variables
+* Functions
+* Matching
+
+???
+This is well covered elsewhere, and we'll focus on a small subset and the particularly unique parts of Erlang
+
+---
+# Erlang is expression based
+* In other languages, statements produce side effects
+* Erlang uses expressions; which compute values
+  * Almost nothing produces a side effect
+  * This is a feature; side effects are hard to reason about
+* Expressions are separated by commas, not semicolons
+  * Not like most every other language
+  * Its syntax is derived from Prolog
+
+* Expressions produce values
+
+* Functions are values too
+
+---
+# Numeric data types:
+## Integers are bignums
+```erlang
+> 1024*1024*1024*1024.  
+1099511627776
+> 1099511627776*1099511627776.
+1208925819614629174706176
+> 1208925819614629174706176 * 1208925819614629174706176.
+1461501637330902918203684832716283019655932542976
+```
+## Floats are IEEE 754 64 bit
+```erlang
+> 2 *  3.141592653589793.
+6.283185307179586
+```
+???
+Integers are coerced to floats when mixed
+---
+# Atoms are a literal constant with a name
+* Similar to ruby symbols
+* lowercase strings are interpreted as atoms
+* or any text quoted with a single quote: '
+```erlang
+> foo.
+foo
+> bar.
+bar.
+> 'a really odd symbol'
+'a really odd symbol'
+```
+
+---
+# Lists
+* Lists have a variable number of terms
+```erlang
+[ ]
+[ 1 ]
+[ 1, 2, 3 ]
+```
+* Lists are essentially linked lists
+```erlang
+[ Head | Tail ]
+```
+  * Tail can be a list
+
+* You can build lists by prepending onto other lists
+```
+ > [ 1 | [ 2, 3 ] ].
+[1,2,3]
+```
+---
+# Tuples 
+* Have a fixed number of terms.
+```erlang
+> {}.
+> { 1, 2, 3 }.
+```
+* Often used to create 'typed' values
+```erlang
+> {seconds, 10}.
+```
+* Also used to build property lists (proplists)
+```erlang
+> [{ timeout, 10 }, {count, 5}].
+```
+
+* Tuples are used to build records (later)
+
+---
+# Variables are capitalized strings
+
+* Variables can be bound or unbound
+* Binding can be done with the '=' operator
+```erlang
+> X = 1.
+> Y = 2.
+> X + Y.
+```
+* Once bound they are immutable
+```erlang
+> X = 1.
+1
+> X = 2.
+** exception error: no match of right hand side value 2
+```
+* Rebinding throws a bad match because '=' is a pattern match operator (more later) 
+---
+# Named Functions
+* Named functions are defined at the module level
+```erlang
+add(A, B) ->
+  1, 
+  A + B.
+```
+  * The name is an atom
+  * The variables in the arguments are bound on entry
+  * The body is a comma separated set of expressions
+  * The last expression is the return value
+  
+* Can't be defined in the REPL.
+---
+# Functions can be defined anonymously
+
+* Here we bind a fun to the variable "Add"
+```erlang
+Add = fun(A, B) -> A + B end.
+```
+* Functions capture their surrounding context
+  * Currently bound variables are captured and visible inside
+
+* Once bound a function can be called at a later point
+```erlang
+Add(1, 2).
+```
+* We also can bind a named function to a variable
+```erlang
+Add = fun add/2
+```
+
+???
+More in the functional programming session
+
+---
+# Pattern matching:
+## It's the heart of Erlang syntax
+* The '=' operator is not like other languages;
+
+* It's not assignment but a pattern matching operator
+* The left hand side can be a mix of:
+  * Unbound variables
+  * Bound variables
+  * Constants
+
+* Pattern matching is used *everywhere*
+
+???
+This is probably the core takehome 
+
+---
+# Pattern matching is not assignment
+
+* Simple matches look like assignment
+```erlang
+A = 1.
+B = foobar.
+```
+* But as we saw before, unbound variables become bound by a match
+```erlang
+> A = 1. % Now A is bound to 1
+1
+> A = 1. % A is already bound, but the values match
+1
+> A = 2. 
+** exception error: no match of right hand side value 2
+```
+---
+# More complex patterns can be matched:
+* They can contain a mix of bound and unbound variables.
+```erlang
+> A = 1.
+> {A, B, 3} = {1, 2, 3}.
+{1,2,3}
+> B.
+2
+```
+* Matches don't need any variables
+```erlang
+ok = DoSomething().
+```
+* when a match fails, we get a bad_match exception.
+  * That's useful in combination with the fail fast philosophy
+
+---
+# Case statements
+    
+## Case statements are built from pattern matches
+```erlang
+case N of ->
+  0 -> 0;
+  1 -> 1;
+  X -> 1/X
+end
+```
+* Clauses are separated by ';'
+* Terminated by 'end'
+* Case statements do not need to be exhaustive
+* First match succeeds
+* Free variables on the left hand side of the '->' will be bound on
+the right hand side. 
+
+---
+# Case statements can have guards
+```erlang
+%% Counting for electrical engineers
+case N of
+  X when X < 0 -> negative;
+  1 -> one;
+  2 -> two;
+  X when X < 5 -> many;
+  X -> infinity
+end.
+```
+* Guards are limited expressions
+  * Basic operators allowed
+  * No arbitrary function calls	  
+  * Only a limited subset of builtin functions
+
+	  
+---
+# Matches can be quite complex
+```erlang
+count(TreeNode) ->
+  case TreeNode of
+    {leaf, Data} -> 1;
+    {node, undefined, undefined} -> 1;
+    {node, undefined, RN} -> count(RN);
+    {node, LN, undefined} -> count(LN);
+    {node, LN, RN} -> count(LN) + count(RN)
+  end.
+```
+
+---
+# Functions heads also are matches
+```erlang
+fact(1) ->
+  1;
+fact(X) -> 
+  X * fact(X-1).
+```
+* This is a very common idiom and can create some beautiful code
+* Chef style tends to prefer this to case 
+---
+# No looping in erlang
+## Instead recursion 
+* Variables in a function aren't mutable; how do we update state?
+* We call ourselves with the new state
+
+```erlang
+loop(0, Acc) ->
+   ok;
+loop(N, Acc) ->
+   loop(N-1, Acc+1).
+```
+
+## Erlang is fully tail recursive
+* If the last expression in a function is a function call, 
+* More on that when we do the "Functional Programming and Erlang" session
+
+---
+# Next session
+
+## Processes and message passing
+
+      
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
