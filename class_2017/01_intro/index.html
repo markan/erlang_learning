@@ -36,9 +36,10 @@
 # What is Erlang?
 ## Erlang is not:
 * A particularly good *systems* programming language
-* A way to get bare metal speed (but think twice before you say you
-need that)
-* Terribly similar to other common languages; learning curve is a thing
+* A way to get bare metal speed
+  * but think twice before you say you need that
+* Terribly similar to other common languages
+  * learning curve is a thing
 
 ---
 # What is this class about?
@@ -134,12 +135,17 @@ A later session will go into the shell in more detail
 This is well covered elsewhere, and we'll focus on a small subset and the particularly unique parts of Erlang
 
 ---
-# Everything in erlang is an expression.
-* Its syntax is derived from prolog
+# Erlang is expression based
+* In other languages, statements produce side effects
+* Erlang uses expressions; which compute values
+  * Almost nothing produces a side effect
+  * This is a feature; side effects are hard to reason about
 * Expressions are separated by commas, not semicolons
   * Not like most every other language
+  * Its syntax is derived from Prolog
 
 * Expressions produce values
+
 * Functions are values too
 
 ---
@@ -164,7 +170,7 @@ Integers are coerced to floats when mixed
 # Atoms are a literal constant with a name
 * Similar to ruby symbols
 * lowercase strings are interpreted as atoms
-* or any text quoted with a "'"
+* or any text quoted with a single quote: '
 ```erlang
 > foo.
 foo
@@ -313,8 +319,8 @@ B = foobar.
 ok = DoSomething().
 ```
 * when a match fails, we get a bad_match exception.
+  * That's useful in combination with the fail fast philosophy
 
-That's useful in combination with the fail fast philosophy
 ---
 # Case statements
     
