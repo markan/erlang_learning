@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+y<!DOCTYPE html>
 <html>
   <head>
     <title>Erlang Tutorial: Introduction to Erlang at Chef</title>
@@ -173,14 +173,14 @@ bar.
 ```
 
 ---
-# Composite data types include
+# Lists
 ## Lists have a variable number of terms
 ```erlang
 [ ]
 [ 1 ]
 [ 1, 2, 3 ]
 ```
-### Lists are essentially linked lists
+## Lists are essentially linked lists
 ```erlang
 [ Head | Tail ]
 ```
@@ -192,11 +192,23 @@ bar.
 [1,2,3]
 ```
 ---
-# Tuples have a fixed number of terms.
+# Tuples 
+* Have a fixed number of terms.
 ```erlang
 > {}.
 > { 1, 2, 3 }.
 ```
+* Often used to create 'typed' values
+```erlang
+> {seconds, 10}.
+```
+* Also used to build proplists
+```erlang
+> [{ timeout, 10 }, {count, 5}].
+```
+
+* Tuples are used to build records (later)
+
 ---
 # Variables are Capitalized strings
 
@@ -217,6 +229,7 @@ bar.
 * Rebinding throws a bad match because '=' is a pattern match operator (more later) 
 ---
 # Named Functions
+* 
 ```erlang
 add(A, B) ->
   1, 
@@ -237,7 +250,7 @@ add(A, B) ->
 Add = fun(A, B) -> A + B end.
 ```
 * And here it is called at a later point
-```
+```erlang
 Add(1, 2).
 ```
 * We can bind a named function to a variable
@@ -249,12 +262,14 @@ Add = fun add/2
 More in the functional programming session
 
 ---
-# Pattern matching: The heart of Erlang syntax
-
+# Pattern matching:
+## It's the heart of Erlang syntax
 * the '=' operator is not like other languages;
 * it's not assignment but a pattern matching operator
-* The left hand side can be a mix of bound variables, constants and
-unbound variables
+* The left hand side can be a mix of:
+  * unbound variables
+  * bound variables
+  * constants
 
 ???
 If there's one thing I want people to walk away with it's this.
