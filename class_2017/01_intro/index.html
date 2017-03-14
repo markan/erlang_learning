@@ -26,16 +26,17 @@
     <textarea id="source">
      
 ---    
-# What is Erlang
-
+# What is Erlang?
 ## Erlang is:
 
-* A functional programming language
-* Designed for massive concurrency from day one
-* Comes with OTP, which is a good pattern for resiliency
+* A pure functional programming language
+* Designed for massive concurrency
+* It's OTP library provides a good pattern for resiliency
 
+---
+# What is Erlang?
 ## Erlang is not:
-* A particularly good systems programming language
+* A particularly good *systems* programming language
 * A way to get bare metal speed (but think twice before you say you
 need that)
 * Terribly similar to other common languages; learning curve is a thing
@@ -69,187 +70,298 @@ Guest sessions are welcome!
 ---
 # Why does Chef use Erlang?
 
-* Functional/actor model makes it easy to reason about parallelism
+* Functional/actor model makes it easy to reason about concurrency
+
 * Erlang's OTP library makes it easy to build resilient systems
-* Fail fast and recover vs lots of error handling
+
 * Easily scales to tens of thousands of threads
+
 * Per thread garbage collection makes handling web requests very
 efficient
+
 * Incredibly powerful built-in inspection tools for live systems. (Trace anything)
 
 ---
-# What parts of Erlang do we not use
-* Distributed communications
+# OTP and the 'let it crash philosophy'
+
+* Error handling and recovery is hard
+
+* The recovery process can be complex
+
+* Instead, restart subsystems to put them in a known state
+
+* Erlang/OTP is built around that approach
+
+???
+In some senses sophisticated error handling and recovery becomes an *optimization*
+
+---
+# What parts of Erlang don't we use?
+* Distributed Erlang (multiple hosts)
+
 * Live systems update
 
+???
+Distributed erlang is really amazing, but there are some blockers
+(security), and we've not really *needed* it yet.
+ 
 ---
 # ERL
+## Erlang has a REPL 'erl'
+```erlang
+% erl
+> 1 + 1.
+2
+```
+* If a line begins with a '>' it's intended for _erl_
+* Commas separate expressions
+* Periods terminate 'statements'
 
-## All of our examples are being done in in the erlang REPL 'erl
-    % erl
-    >
 ## The erl shell is a powerful tool
-### Beyond the normal uses of a repl it can also be used to connect to other running instances
+* Beyond the normal uses of a repl it can also be used to connect to other running instances
 
-## If an example begins with a '>' it's intended for the erlang shell.
-
-## A later session will go into the shell in more detail
-
----
-# Some Minor bits of syntax
-
-## Everything in erlang is an expression.
-## Expressions are separated by commas. (not semicolons like most every other language)
+???
+A later session will go into the shell in more detail
 
 ---
-# Numeric  data types include integers and floats
-    > 1.
-    1
-    > 1+1.0.
-    2.0
+# A whiplash inducing tour of Erlang syntax
+* Expressions
+* Types
+* Variables
+* Functions
+* Matching
 
+???
+This is well covered elsewhere, and we'll focus on a small subset and the particularly unique parts of Erlang
+
+---
+# Everything in erlang is an expression.
+* Expressions are separated by commas, not semicolons (like most every other language)
+* Expressions produce values
+* That includes functions!
+
+---
+# Numeric data types:
 ## Integers are bignums
+```erlang
+> 1024*1024*1024*1024.  
+1099511627776
+> 1099511627776*1099511627776.
+1208925819614629174706176
+> 1208925819614629174706176 * 1208925819614629174706176.
+1461501637330902918203684832716283019655932542976
+```
 ## Floats are IEEE 754 64 bit
+```erlang
+> 2 *  3.141592653589793.
+6.283185307179586
+```
+???
+Integers are coerced to floats when mixed
 ---
-# atoms
-* Literal constant with a name
+# atoms are a literal constant with a name
 * Similar to ruby symbols
-* Atoms are lowercase strings,
-* Or any text quoted with a "'"
-    > foo.
-    foo
-    > bar.
-    bar.
-    > 'a really odd symbol'
+* lowercase strings are interpreted as atoms
+* or any text quoted with a "'"
+```erlang
+> foo.
+foo
+> bar.
+bar.
+> 'a really odd symbol'
+'a really odd symbol'
+```
 
 ---
 # Composite data types include
 ## Lists have a variable number of terms
-    [ 1, 2, 3 ]
+```erlang
+[ ]
+[ 1 ]
+[ 1, 2, 3 ]
+```
+### Lists are essentially linked lists
+```erlang
+[ Head | Tail ]
+```
+* Tail can be a list
 
-## Lists can be prepended to easily
-	> [ 1 | [ 2, 3 ] ].
-	[1,2,3]
-
+## You can build lists by prepending onto other lists
+```
+ > [ 1 | [ 2, 3 ] ].
+[1,2,3]
+```
 ---
 # Tuples have a fixed number of terms.
-    > {}.
-    > { 1, 2, 3 }.
-
+```erlang
+> {}.
+> { 1, 2, 3 }.
+```
 ---
 # Variables are Capitalized strings
 
-## Variables can be bound or unbound; bound with the '=' operator
-    > X = 1.
-    > Y = 2.
-    > X + Y.
-
-## Once bound they are immutable
-    > X = 1.
-    > X = 2.
-
-    Throws a bad match
+* Variables can be bound or unbound
+* Binding can be done with the '=' operator
+```erlang
+> X = 1.
+> Y = 2.
+> X + Y.
+```
+* Once bound they are immutable
+```erlang
+> X = 1.
+1
+> X = 2.
+** exception error: no match of right hand side value 2
+```
+* Rebinding throws a bad match because '=' is a pattern match operator (more later) 
 ---
 # Named Functions
-
-    add(A, B) ->
-	  1, 
-	  A + B.
-
-* Name is an atom
-* comma separated set of expressions
+```erlang
+add(A, B) ->
+  1, 
+  A + B.
+```
+* The name is an atom
+* The variables in the arguments are bound on entry
+* The body is a comma separated set of expressions
 * The last expression is the return value
-* Defined at the top level of a file
-
-## We can bind a function to a variable
-    Add = fun add/2
-
+* Defined at the top level of a module (no nested named functions)
+* Can't be defined in the REPL.
 ---
 # Anonymous Functions
 ## Functions can be defined anonymously
 
-## Here we bind a fun to the add variable
-    Add = fun(A, B) -> A + B end.
-## And here it is called at a later point
-    Add(1, 2).
+* Here we bind a fun to the add variable
+```erlang
+Add = fun(A, B) -> A + B end.
+```
+* And here it is called at a later point
+```
+Add(1, 2).
+```
+* We can bind a named function to a variable
+```erlang
+Add = fun add/2
+```
+* Functions capture their surrounding context
+???
+More in the functional programming session
 
 ---
-# Pattern matching is at the heart of erlang syntax
+# Pattern matching: The heart of Erlang syntax
 
-## the '=' is not like other languages;
-## it's not assignment but a pattern matching operator
-## The left hand side can be a mix of bound variables, constants and
+* the '=' operator is not like other languages;
+* it's not assignment but a pattern matching operator
+* The left hand side can be a mix of bound variables, constants and
 unbound variables
 
+???
+If there's one thing I want people to walk away with it's this.
+
 ---
-# Pattern matching is at the heart of erlang syntax
+# Pattern matching is not assignment
 
-## Simple matches look like assignment
-    A = 1.
-    B = foobar.
-	
-## But unbound variables become bound by a match
-    > A = 1. % Now A is bound to 1
-	1
-    > A = 2.
-	** exception error: no match of right hand side value 2
+* Simple matches look like assignment
+```erlang
+A = 1.
+B = foobar.
+```
+* But as we saw before, unbound variables become bound by a match
+```erlang
+> A = 1. % Now A is bound to 1
+1
+> A = 1. % A is already bound, but the values match
+1
+> A = 2. 
+** exception error: no match of right hand side value 2
+```
+---
+# More complex patterns can be matched:
+* They can contain a mix of bound and unbound variables.
+```erlang
+> A = 1.
+> {A, B, 3} = {1, 2, 3}.
+{1,2,3}
+> B.
+2
+```
+* Matches don't need any variables
+```erlang
+ok = DoSomething().
+```
+* when a match fails, we get a bad_match exception.
 
-## More complex patterns can be matched, with a mix of bound and
-    unbound variables.
-    > A = 1.
-    > {A, B, 3} = {1, 2, 3}.
-    {1,2,3}
-    > B.
-    2
-
-## Matches don't need any variables
-   ok = DoSomething().
-
-## when a match fails, we get a bad_match exception.
-
-That's useful!
-
+That's useful in combination with the fail fast philosophy
 ---
 # Case statements
     
 ## Case statements are built from pattern matches
-    case N of
-      1 -> one;
-      2 -> two;
-      X -> unknown;
-    end.
-
+```erlang
+case N of ->
+  0 -> 0;
+  1 -> 1;
+  X -> 1/X
+end
+```
 * Clauses are separated by ';'
 * Terminated by 'end'
 * Case statements do not need to be exhaustive
 * First match succeeds
 * Free variables on the left hand side of the '->' will be bound on
-the right hand side
+the right hand side. 
 
 ---
-# Functions can also be match statements
-    fact(1) ->
-      1;
-    fact(X) -> 
-      X * fact(X-1).
-     
+# Case statements can have guards
+```erlang
+case N of
+  X when X < 0 -> negative;
+  1 -> one;
+  2 -> two;
+  X when X < 5 -> many;
+  X -> infinity
+end.
+```
+* Guards are limited expressions
+* no function calls or anything too complex
+	  
+---
+# Matches can be quite complex
+```erlang
+count(TreeNode) ->
+  case TreeNode of
+    {leaf, Data} -> 1;
+    {node, undefined, undefined} -> 1;
+    {node, undefined, RN} -> count(RN);
+    {node, LN, undefined} -> count(LN);
+    {node, LN, RN} -> count(LN) + count(RN)
+  end.
+```
 
+---
+# Function heads can also be match statements
+```erlang
+fact(1) ->
+  1;
+fact(X) -> 
+  X * fact(X-1).
+```
+* This is a very common idiom and can create some beautiful code
 ---
 # No looping in erlang
+## Recursion 
+* Variables in a function aren't mutable; how do we update state?
+* We call ourselves with the new state
+```erlang
+loop(0, Acc) ->
+  ok;
+loop(N, Acc) ->
+  loop(N-1, Acc+1).
+```
 
-## Recursion (see the factorial example above)
-   Variables in a function aren't mutable; how do we update state?
-   Call ourselves with the new state
-
-    loop(0, Acc) ->
-      ok;
-    loop(N, Acc) ->
-      loop(N-1, Acc+1).
-  
 ## Erlang is fully tail recursive
-    If the last expression in a function is a function call,     
-
-## More on that when we do the functional programming and erlang
+* If the last expression in a function is a function call, 
+* More on that when we do the functional programming and erlang (session 3)
 
 ---
 # Next session
