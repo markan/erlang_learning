@@ -24,13 +24,17 @@
   </head>
   <body>
     <textarea id="source">
-
+class: center, middle
+### Introduction to Erlang: Session 1
+### Mark Anderson and Marc Paradise
+---
+      
 # What is Erlang?
 ## Erlang is:
 
 * A pure functional programming language
 * Designed for massive concurrency
-* It's OTP library provides a good pattern for resiliency
+* Its OTP library provides a good pattern for resiliency
 
 ---
 # What is Erlang?
@@ -66,6 +70,9 @@ Guest sessions are welcome!
 * "Erlang and OTP in Action" by Eric Merritt, Martin Logan, and Richard Carlsson, Manning Press
 
    This covers some introductory material, but where it really shines is in it's coverage of the OTP runtime system.
+
+* http://www.exercism.io/ has some exercises
+  * We should contribute more 
 
 ---
 # Why does Chef use Erlang?
@@ -326,7 +333,7 @@ ok = DoSomething().
     
 ## Case statements are built from pattern matches
 ```erlang
-case N of ->
+case N of
   0 -> 0;
   1 -> 1;
   X -> 1/X
